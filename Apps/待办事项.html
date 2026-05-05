@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>待办事项</title>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <style>
+    :root {
+      --bg-color: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --input-bg: #ffffff;
+      --task-bg: #f7fafc;
+      --sidebar-bg: #2d3748;
+      --sidebar-text: #ffffff;
+    }
+
+    .dark-mode {
+      --bg-color: #1a202c;
+      --card-bg: #2d3748;
+      --text-color: #e2e8f0;
+      --text-light: #a0aec0;
+      --border-color: #4a5568;
+      --input-bg: #4a5568;
+      --task-bg: #374151;
+      --sidebar-bg: #171e27;
+      --sidebar-text: #e2e8f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft YaHei', sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 左侧折叠侧边栏 - 外部应用导航 */
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      transition: all 0.3s;
+      height: 100vh;
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .sidebar.collapsed {
+      width: 60px;
+    }
+    .sidebar-toggle {
+      padding: 16px;
+      font-size: 20px;
+      cursor: pointer;
+      background: #4a5568;
+      text-align: center;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 10px 0;
+    }
+    .sidebar-menu li {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-menu li:hover {
+      background: #4a5568;
+    }
+    .sidebar-menu li i {
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar.collapsed .sidebar-menu li span {
+      display: none;
+    }
+
+    /* 主内容区 - 固定最大宽度，居中显示 */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* 夜间模式切换按钮 */
+    .theme-toggle {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .app-header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--text-color);
+    }
+    .add-group {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .add-group input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 16px;
+      background: var(--input-bg);
+      color: var(--text-color);
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #4299e1;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn:hover { background: #3182ce; }
+    .btn-danger { background: #e53e3e; }
+    .btn-danger:hover { background: #c53030; }
+    .btn-success { background: #38a169; }
+    .back-btn {
+      background: #718096;
+      margin-bottom: 20px;
+    }
+
+    .groups-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .group-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .group-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* 分组箭头 - 正确样式：展开向下，折叠向右 */
+    .group-arrow {
+      transition: transform 0.2s ease;
+      transform: rotate(90deg);
+    }
+    .group-arrow.collapsed {
+      transform: rotate(0deg);
+    }
+
+    .group-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .group-body {
+      padding: 15px;
+      display: block;
+      background: var(--card-bg);
+    }
+    .group-body.hide {
+      display: none;
+    }
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .task-item {
+      padding: 12px;
+      background: var(--task-bg);
+      border-radius: 6px;
+      border-left: 4px solid #4299e1;
+      cursor: move;
+      transition: 0.2s;
+    }
+    .task-item:hover { opacity: 0.9; }
+    .task-item.completed {
+      border-left: 4px solid #38a169;
+      opacity: 0.7;
+    }
+    .task-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .task-text { flex: 1; margin-right: 10px; color: var(--text-color); }
+    .task-dates {
+      font-size: 12px;
+      color: var(--text-light);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .add-task {
+      display: flex;
+      gap: 10px;
+    }
+    .add-task input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--input-bg);
+      color: var(--text-color);
+    }
+    .sortable-ghost { opacity: 0.4; background: var(--border-color) !important; }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999;
+    }
+    .modal-content {
+      background: var(--card-bg); padding: 25px; border-radius: 10px; width: 90%; max-width: 500px;
+    }
+    .modal input {
+      width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 6px;
+      background: var(--input-bg); color: var(--text-color);
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    .hide { display: none !important; }
+
+    /* 分组子页面 */
+    .group-detail-page {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 左侧折叠侧边栏 - 外部应用跳转 -->
+  <div class="sidebar collapsed" id="sidebar">
+    <div class="sidebar-toggle" id="toggleSidebar">
+      <i class="fa fa-bars"></i>
+    </div>
+    <ul class="sidebar-menu">
+      <li><i class="fa fa-sticky-note"></i><span>备忘录</span></li>
+      <li><i class="fa fa-calendar"></i><span>日程日历</span></li>
+      <li><i class="fa fa-book"></i><span>知识库</span></li>
+      <li><i class="fa fa-calculator"></i><span>小计算器</span></li>
+    </ul>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main-container">
+    <!-- 夜间模式切换 -->
+    <div class="theme-toggle" id="themeToggle">
+      <i class="fa fa-moon-o"></i>
+    </div>
+
+    <div id="mainView">
+      <div class="app-header">
+        <h1>待办事项</h1>
+        <p>分组管理 + 拖拽排序 + 日期记录</p>
+      </div>
+
+      <div class="add-group">
+        <input type="text" id="groupInput" placeholder="输入新分组名称...">
+        <button class="btn" onclick="addGroup()">创建分组</button>
+      </div>
+
+      <div id="groupsContainer" class="groups-container"></div>
+    </div>
+
+    <!-- 分组独立子页面 -->
+    <div id="groupDetailView" class="hide">
+      <div class="group-detail-page">
+        <button class="btn back-btn" onclick="showMainView()">← 返回主页</button>
+        <div id="groupDetailContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <div id="editModal" class="modal hide">
+    <div class="modal-content">
+      <h3>编辑事项</h3>
+      <input type="text" id="editInput">
+      <div class="modal-actions">
+        <button class="btn" onclick="closeEditModal()">取消</button>
+        <button class="btn btn-success" onclick="saveEdit()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let todoData = JSON.parse(localStorage.getItem('todoHierarchy')) || { groups: [] };
+    let currentEditId = null;
+    let focusAfterCreateGroupId = null;
+
+    // 侧边栏折叠
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('toggleSidebar').onclick = () => {
+      sidebar.classList.toggle('collapsed');
+    };
+
+    // 夜间模式
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+    if(localStorage.getItem('darkMode') === '1'){
+      document.body.classList.add('dark-mode');
+      themeIcon.className = 'fa fa-sun-o';
+    }
+    themeToggle.onclick = () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDark ? '1' : '0');
+      themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
+    };
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '未记录';
+      return new Date(dateStr).toLocaleString('zh-CN');
+    }
+    function generateId() {
+      return Date.now() + Math.random().toString(36).slice(2,7);
+    }
+    function saveData() {
+      localStorage.setItem('todoHierarchy', JSON.stringify(todoData));
+    }
+
+    // 视图切换
+    function showMainView() {
+      document.getElementById('mainView').classList.remove('hide');
+      document.getElementById('groupDetailView').classList.add('hide');
+    }
+    function openGroupDetail(gid) {
+      const group = todoData.groups.find(g => g.id === gid);
+      const container = document.getElementById('groupDetailContent');
+      container.innerHTML = `
+        <h2 style="margin-bottom:20px;color:var(--text-color)">${group.name}</h2>
+        <div class="task-list" id="detailTaskList"></div>
+      `;
+      const list = container.querySelector('#detailTaskList');
+      group.tasks.forEach(task => {
+        const item = document.createElement('div');
+        item.className = `task-item ${task.completed?'completed':''}`;
+        item.innerHTML = `
+          <div class="task-content">
+            <div class="task-text">${task.content}</div>
+          </div>
+          <div class="task-dates">
+            <span>创建: ${formatDate(task.createTime)}</span>
+            <span>编辑: ${formatDate(task.editTime)}</span>
+            ${task.completed?`<span>完成: ${formatDate(task.completeTime)}</span>`:''}
+          </div>
+        `;
+        list.appendChild(item);
+      });
+      document.getElementById('mainView').classList.add('hide');
+      document.getElementById('groupDetailView').classList.remove('hide');
+    }
+
+    // 渲染主页分组列表
+    function renderFull() {
+      const container = document.getElementById('groupsContainer');
+      container.innerHTML = '';
+      todoData.groups.forEach(group => {
+        if(group.collapsed === undefined) group.collapsed = false;
+        const card = document.createElement('div');
+        card.className = 'group-card';
+        card.dataset.gid = group.id;
+        card.innerHTML = `
+          <div class="group-header" onclick="toggleGroupCollapse('${group.id}')">
+            <div class="group-title">
+              <i class="fa fa-chevron-right group-arrow ${group.collapsed ? 'collapsed' : ''}"></i>
+              ${group.name}
+            </div>
+            <div class="group-actions" onclick="event.stopPropagation()">
+              <button class="btn" onclick="openGroupDetail('${group.id}')" title="打开独立页面"><i class="fa fa-external-link"></i></button>
+              <button class="btn" onclick="editGroup('${group.id}')" title="编辑分组"><i class="fa fa-pencil"></i></button>
+              <button class="btn btn-danger" onclick="deleteGroup('${group.id}')" title="删除分组"><i class="fa fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="group-body ${group.collapsed ? 'hide' : ''}">
+            <ul class="task-list" data-gid="${group.id}"></ul>
+            <div class="add-task">
+              <input type="text" class="task-input" data-gid="${group.id}" placeholder="添加子事项...">
+              <button class="btn" onclick="addTaskQuick('${group.id}')">添加</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+        refreshTaskList(group.id);
+      });
+
+      document.querySelectorAll('.task-input').forEach(input => {
+        input.onkeydown = e => {
+          if(e.key === 'Enter'){ e.preventDefault(); addTaskQuick(input.dataset.gid); }
+        }
+      });
+
+      initDrag();
+      saveData();
+
+      if(focusAfterCreateGroupId){
+        setTimeout(()=>{
+          const inp = document.querySelector(`.task-input[data-gid="${focusAfterCreateGroupId}"]`);
+          if(inp) inp.focus();
+          focusAfterCreateGroupId = null;
+        },10);
+      }
+    }
+
+    // 分组折叠/展开
+    function toggleGroupCollapse(gid) {
+      const g = todoData.groups.find(x=>x.id===gid);
+      g.collapsed = !g.collapsed;
+      renderFull();
+    }
+
+    // 局部刷新任务
+    function refreshTaskList(gid) {
+      const group = todoData.groups.find(g=>g.id===gid);
+      const list = document.querySelector(`.task-list[data-gid="${gid}"]`);
+      if(!list) return;
+      list.innerHTML = '';
+      group.tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = `task-item ${task.completed?'completed':''}`;
+        li.dataset.tid = task.id;
+        li.innerHTML = `
+          <div class="task-content">
+            <div class="task-text">${task.content}</div>
+            <div class="task-actions">
+              <button class="btn" onclick="toggleComplete('${gid}','${task.id}')">
+                <i class="fa ${task.completed?'fa-check-circle':'fa-circle-o'}"></i>
+              </button>
+              <button class="btn" onclick="openEditModal('${task.id}')"><i class="fa fa-pencil"></i></button>
+              <button class="btn btn-danger" onclick="deleteTask('${gid}','${task.id}')"><i class="fa fa-trash"></i></button>
+            </div>
+          </div>
+          <div class="task-dates">
+            <span>创建: ${formatDate(task.createTime)}</span>
+            <span>编辑: ${formatDate(task.editTime||'')}</span>
+            ${task.completed?`<span>完成: ${formatDate(task.completeTime)}</span>`:''}
+          </div>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    // 无限添加任务
+    function addTaskQuick(gid) {
+      const input = document.querySelector(`.task-input[data-gid="${gid}"]`);
+      const val = input.value.trim();
+      if(!val) return;
+      const group = todoData.groups.find(g=>g.id===gid);
+      group.tasks.push({
+        id: generateId(), content: val,
+        createTime: new Date().toISOString(),
+        editTime: null, completeTime: null, completed: false
+      });
+      input.value = '';
+      input.focus();
+      saveData();
+      refreshTaskList(gid);
+    }
+
+    // 拖拽
+    function initDrag() {
+      new Sortable(document.getElementById('groupsContainer'), {
+        animation:150, handle:'.group-title',
+        onEnd:evt=>{
+          const item = todoData.groups.splice(evt.oldIndex,1)[0];
+          todoData.groups.splice(evt.newIndex,0,item);
+          renderFull();
+        }
+      });
+      document.querySelectorAll('.task-list').forEach(list=>{
+        new Sortable(list,{
+          animation:150, group:{name:'tasks',pull:false,put:false},
+          onEnd:evt=>{
+            const gid = list.dataset.gid;
+            const g = todoData.groups.find(x=>x.id===gid);
+            const t = g.tasks.splice(evt.oldIndex,1)[0];
+            g.tasks.splice(evt.newIndex,0,t);
+            saveData();
+            refreshTaskList(gid);
+          }
+        });
+      });
+    }
+
+    // 分组操作
+    function addGroup() {
+      const inp = document.getElementById('groupInput');
+      const name = inp.value.trim();
+      if(!name) return alert('请输入分组名称');
+      todoData.groups.push({id:generateId(),name:name,tasks:[],collapsed:false});
+      inp.value = '';
+      renderFull();
+    }
+    function editGroup(gid) {
+      const g = todoData.groups.find(x=>x.id===gid);
+      const n = prompt('修改分组名称',g.name);
+      if(n&&n.trim()){ g.name=n.trim(); renderFull(); }
+    }
+    function deleteGroup(gid) {
+      if(!confirm('确定删除该分组？')) return;
+      todoData.groups = todoData.groups.filter(g=>g.id!==gid);
+      renderFull();
+    }
+
+    // 任务操作
+    function toggleComplete(gid,tid) {
+      const g = todoData.groups.find(x=>x.id===gid);
+      const t = g.tasks.find(x=>x.id===tid);
+      t.completed = !t.completed;
+      t.completeTime = t.completed ? new Date().toISOString() : null;
+      saveData(); refreshTaskList(gid);
+    }
+    function deleteTask(gid,tid) {
+      if(!confirm('确定删除？')) return;
+      const g = todoData.groups.find(x=>x.id===gid);
+      g.tasks = g.tasks.filter(x=>x.id!==tid);
+      saveData(); refreshTaskList(gid);
+    }
+
+    // 编辑弹窗
+    function openEditModal(tid) {
+      let txt='';
+      todoData.groups.forEach(g=>{ const t=g.tasks.find(x=>x.id===tid); if(t) txt=t.content; });
+      currentEditId=tid;
+      document.getElementById('editInput').value=txt;
+      document.getElementById('editModal').classList.remove('hide');
+    }
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hide');
+      currentEditId=null;
+    }
+    function saveEdit() {
+      const val=document.getElementById('editInput').value.trim();
+      if(!val) return;
+      todoData.groups.forEach(g=>{
+        const t=g.tasks.find(x=>x.id===currentEditId);
+        if(t){ t.content=val; t.editTime=new Date().toISOString(); }
+      });
+      closeEditModal();
+      renderFull();
+    }
+
+    // 回车创建分组
+    document.getElementById('groupInput').addEventListener('keydown',e=>{
+      if(e.key==='Enter') addGroup();
+    });
+
+    renderFull();
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应用中心</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <style>
+    :root {
+      --bg-color: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #2d3748;
+      --text-light: #718096;
+      --border-color: #e2e8f0;
+      --sidebar-bg: #2d3748;
+      --sidebar-text: #ffffff;
+    }
+
+    .dark-mode {
+      --bg-color: #1a202c;
+      --card-bg: #2d3748;
+      --text-color: #e2e8f0;
+      --text-light: #a0aec0;
+      --border-color: #4a5568;
+      --sidebar-bg: #171e27;
+      --sidebar-text: #e2e8f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft YaHei', sans-serif;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 左侧折叠侧边栏 */
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      transition: all 0.3s;
+      height: 100vh;
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .sidebar.collapsed {
+      width: 60px;
+    }
+    .sidebar-toggle {
+      padding: 16px;
+      font-size: 20px;
+      cursor: pointer;
+      background: #4a5568;
+      text-align: center;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 10px 0;
+    }
+    .sidebar-menu li {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-menu li:hover {
+      background: #4a5568;
+    }
+    .sidebar-menu li i {
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar.collapsed .sidebar-menu li span {
+      display: none;
+    }
+
+    /* 主内容 */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* 夜间模式 */
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .app-title {
+      font-size: 32px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .app-grid {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .app-card {
+      width: 180px;
+      height: 180px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-color);
+      transition: transform 0.2s;
+    }
+    .app-card:hover {
+      transform: translateY(-4px);
+    }
+    .app-card i {
+      font-size: 48px;
+      color: #4299e1;
+    }
+    .app-card span {
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 左侧侧边栏（默认折叠） -->
+<div class="sidebar collapsed" id="sidebar">
+  <div class="sidebar-toggle" id="toggleSidebar">
+    <i class="fa fa-bars"></i>
+  </div>
+  <ul class="sidebar-menu">
+    <li><i class="fa fa-sticky-note"></i><span>备忘录</span></li>
+    <li><i class="fa fa-calendar"></i><span>日程日历</span></li>
+    <li><i class="fa fa-book"></i><span>知识库</span></li>
+    <li><i class="fa fa-calculator"></i><span>小计算器</span></li>
+  </ul>
+</div>
+
+<!-- 主内容 -->
+<div class="main-container">
+  <div class="theme-toggle" id="themeToggle">
+    <i class="fa fa-moon-o"></i>
+  </div>
+
+  <h1 class="app-title">应用中心</h1>
+
+  <div class="app-grid">
+    <!-- 点击直接跳转到你的待办应用 -->
+    <a class="app-card" href="Apps/待办事项.html">
+      <i class="fa fa-list-ul"></i>
+      <span>待办事项</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  // 侧边栏
+  const sidebar = document.getElementById('sidebar');
+  document.getElementById('toggleSidebar').onclick = () => {
+    sidebar.classList.toggle('collapsed');
+  };
+
+  // 夜间模式（和你的应用互通）
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = themeToggle.querySelector('i');
+  if(localStorage.getItem('darkMode') === '1'){
+    document.body.classList.add('dark-mode');
+    themeIcon.className = 'fa fa-sun-o';
+  }
+  themeToggle.onclick = () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDark ? '1' : '0');
+    themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
+  };
+</script>
+</body>
+</html>
