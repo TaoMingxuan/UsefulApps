@@ -18,7 +18,6 @@
       --sidebar-bg: #2d3748;
       --sidebar-text: #ffffff;
     }
-
     .dark-mode {
       --bg-color: #1a202c;
       --card-bg: #2d3748;
@@ -30,7 +29,6 @@
       --sidebar-bg: #171e27;
       --sidebar-text: #e2e8f0;
     }
-
     * {
       margin: 0;
       padding: 0;
@@ -38,8 +36,6 @@
       font-family: 'Microsoft YaHei', sans-serif;
       transition: background 0.3s, color 0.3s;
     }
-
-    /* 全局滚动条贴浏览器最右侧 */
     html {
       overflow-y: auto;
       scrollbar-gutter: stable;
@@ -52,7 +48,6 @@
       margin: 0;
     }
 
-    /* 左侧侧边栏 */
     .sidebar {
       width: 240px;
       background: var(--sidebar-bg);
@@ -98,33 +93,45 @@
       display: none;
     }
 
-    /* 主内容：全局居中，滚动条贴浏览器最右 */
     .main-container {
       flex: 1;
-      margin-left: 240px;
       padding: 20px;
       position: relative;
       max-width: 900px;
       margin: 0 auto;
       margin-left: calc(240px + (100vw - 240px - 900px) / 2);
+      width: 100%;
     }
     .sidebar.collapsed ~ .main-container {
       margin-left: calc(60px + (100vw - 60px - 900px) / 2);
     }
 
-    .theme-toggle {
+    .top-right-bar {
       position: fixed;
-      top: 10px;
+      top: 12px;
       right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 98;
+    }
+    .top-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-color);
+    }
+    .theme-toggle {
       font-size: 22px;
       cursor: pointer;
-      z-index: 98;
+      padding: 4px;
     }
 
     .app-header {
       text-align: center;
       margin-bottom: 20px;
-      color: var(--text-color);
     }
     .add-group {
       background: var(--card-bg);
@@ -140,7 +147,6 @@
       padding: 10px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      font-size: 16px;
       background: var(--input-bg);
       color: var(--text-color);
     }
@@ -151,16 +157,10 @@
       background: #4299e1;
       color: white;
       cursor: pointer;
-      transition: 0.2s;
     }
-    .btn:hover { background: #3182ce; }
     .btn-danger { background: #e53e3e; }
-    .btn-danger:hover { background: #c53030; }
     .btn-success { background: #38a169; }
-    .back-btn {
-      background: #718096;
-      margin-bottom: 20px;
-    }
+    .back-btn { background: #718096; margin-bottom: 20px; }
 
     .groups-container {
       display: flex;
@@ -184,27 +184,32 @@
     .group-title {
       font-size: 18px;
       font-weight: bold;
-      color: var(--text-color);
       display: flex;
       align-items: center;
       gap: 10px;
     }
-
     .group-arrow {
-      transition: transform 0.2s ease;
+      transition: transform 0.2s;
     }
     .group-arrow.collapsed {
       transform: rotate(-90deg);
     }
-
     .group-actions {
       display: flex;
+      align-items: center;
       gap: 8px;
+    }
+    .text-toggle-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-color);
+      cursor: pointer;
     }
     .group-body {
       padding: 15px;
-      display: block;
-      background: var(--card-bg);
     }
     .group-body.hide {
       display: none;
@@ -221,10 +226,7 @@
       background: var(--task-bg);
       border-radius: 6px;
       border-left: 4px solid #4299e1;
-      cursor: move;
-      transition: 0.2s;
     }
-    .task-item:hover { opacity: 0.9; }
     .task-item.completed {
       border-left: 4px solid #38a169;
       opacity: 0.7;
@@ -233,9 +235,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 5px;
     }
-    .task-text { flex: 1; margin-right: 10px; color: var(--text-color); }
     .task-dates {
       font-size: 12px;
       color: var(--text-light);
@@ -256,18 +256,6 @@
       color: var(--text-color);
     }
     .sortable-ghost { opacity: 0.4; background: var(--border-color) !important; }
-    .modal {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999;
-    }
-    .modal-content {
-      background: var(--card-bg); padding: 25px; border-radius: 10px; width: 90%; max-width: 500px;
-    }
-    .modal input {
-      width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 6px;
-      background: var(--input-bg); color: var(--text-color);
-    }
-    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
     .hide { display: none !important; }
 
     .group-detail-page {
@@ -275,6 +263,12 @@
       border-radius: 10px;
       padding: 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .detail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -285,7 +279,7 @@
     <i class="fa fa-bars"></i>
   </div>
   <ul class="sidebar-menu">
-    <li onclick="location.href='index.html'">
+    <li onclick="location.href='../index.html'">
       <i class="fa fa-home"></i><span>返回主页</span>
     </li>
     <li><i class="fa fa-sticky-note"></i><span>备忘录</span></li>
@@ -296,8 +290,13 @@
 </div>
 
 <div class="main-container">
-  <div class="theme-toggle" id="themeToggle">
-    <i class="fa fa-moon-o"></i>
+  <div class="top-right-bar">
+    <button class="top-btn" onclick="exportBackup()">导出备份</button>
+    <button class="top-btn" onclick="importBackup()">导入备份</button>
+    <button class="top-btn hide" id="undoImportBtn" onclick="undoImport()">撤销导入</button>
+    <div class="theme-toggle" id="themeToggle">
+      <i class="fa fa-moon-o"></i>
+    </div>
   </div>
 
   <div id="mainView">
@@ -305,28 +304,30 @@
       <h1>待办事项</h1>
       <p>分组管理 + 拖拽排序 + 日期记录</p>
     </div>
-
     <div class="add-group">
       <input type="text" id="groupInput" placeholder="输入新分组名称...">
       <button class="btn" onclick="addGroup()">创建分组</button>
     </div>
-
     <div id="groupsContainer" class="groups-container"></div>
   </div>
 
   <div id="groupDetailView" class="hide">
     <div class="group-detail-page">
       <button class="btn back-btn" onclick="showMainView()">← 返回主页</button>
-      <div id="groupDetailContent"></div>
+      <div class="detail-head">
+        <h2 id="detailTitle"></h2>
+        <button class="text-toggle-btn" id="detailToggleBtn"></button>
+      </div>
+      <div class="task-list" id="detailTaskList"></div>
     </div>
   </div>
 </div>
 
-<div id="editModal" class="modal hide">
-  <div class="modal-content">
+<div id="editModal" class="hide" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:999;">
+  <div style="background:var(--card-bg);padding:25px;border-radius:10px;width:90%;max-width:500px;">
     <h3>编辑事项</h3>
-    <input type="text" id="editInput">
-    <div class="modal-actions">
+    <input type="text" id="editInput" style="width:100%;padding:10px;margin:10px 0;border:1px solid var(--border-color);border-radius:6px;background:var(--input-bg);color:var(--text-color);">
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:15px;">
       <button class="btn" onclick="closeEditModal()">取消</button>
       <button class="btn btn-success" onclick="saveEdit()">保存</button>
     </div>
@@ -336,7 +337,7 @@
 <script>
 let todoData = JSON.parse(localStorage.getItem('todoHierarchy')) || { groups: [] };
 let currentEditId = null;
-let focusAfterCreateGroupId = null;
+let undoData = JSON.parse(localStorage.getItem('todoUndoData')) || null;
 
 const sidebar = document.getElementById('sidebar');
 document.getElementById('toggleSidebar').onclick = () => {
@@ -345,20 +346,28 @@ document.getElementById('toggleSidebar').onclick = () => {
 
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon = themeToggle.querySelector('i');
-if(localStorage.getItem('darkMode') === '1'){
+if (localStorage.getItem('darkMode') === '1') {
   document.body.classList.add('dark-mode');
   themeIcon.className = 'fa fa-sun-o';
 }
 themeToggle.onclick = () => {
   document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem('darkMode', isDark ? '1' : '0');
-  themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
+  const dark = document.body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode', dark ? '1' : '0');
+  themeIcon.className = dark ? 'fa fa-sun-o' : 'fa fa-moon-o';
 };
 
-function formatDate(dateStr) {
-  if (!dateStr) return '未记录';
-  return new Date(dateStr).toLocaleString('zh-CN');
+function updateUndoButton() {
+  const btn = document.getElementById('undoImportBtn');
+  if (undoData) {
+    btn.classList.remove('hide');
+  } else {
+    btn.classList.add('hide');
+  }
+}
+
+function formatDate(s) {
+  return s ? new Date(s).toLocaleString('zh-CN') : '未记录';
 }
 function generateId() {
   return Date.now() + Math.random().toString(36).slice(2,7);
@@ -371,145 +380,220 @@ function showMainView() {
   document.getElementById('mainView').classList.remove('hide');
   document.getElementById('groupDetailView').classList.add('hide');
 }
+
 function openGroupDetail(gid) {
-  const group = todoData.groups.find(g => g.id === gid);
-  const container = document.getElementById('groupDetailContent');
-  container.innerHTML = `<h2 style="margin-bottom:20px;color:var(--text-color)">${group.name}</h2><div class="task-list" id="detailTaskList"></div>`;
-  const list = container.querySelector('#detailTaskList');
-  group.tasks.forEach(task => {
-    const item = document.createElement('div');
-    item.className = `task-item ${task.completed?'completed':''}`;
-    item.innerHTML = `
-      <div class="task-content"><div class="task-text">${task.content}</div></div>
-      <div class="task-dates">
-        <span>创建: ${formatDate(task.createTime)}</span>
-        <span>编辑: ${formatDate(task.editTime)}</span>
-        ${task.completed?`<span>完成: ${formatDate(task.completeTime)}</span>`:''}
-      </div>
-    `;
-    list.appendChild(item);
-  });
+  const g = todoData.groups.find(x => x.id === gid);
+  document.getElementById('detailTitle').innerText = g.name;
+  const btn = document.getElementById('detailToggleBtn');
+  btn.innerText = g.hideCompleted ? "显示已完成" : "隐藏已完成";
+  btn.onclick = () => {
+    g.hideCompleted = !g.hideCompleted;
+    btn.innerText = g.hideCompleted ? "显示已完成" : "隐藏已完成";
+    saveData();
+    renderDetailTaskList(g);
+  };
+  renderDetailTaskList(g);
   document.getElementById('mainView').classList.add('hide');
   document.getElementById('groupDetailView').classList.remove('hide');
 }
 
-function renderFull() {
-  const container = document.getElementById('groupsContainer');
+function renderDetailTaskList(g) {
+  const container = document.getElementById('detailTaskList');
   container.innerHTML = '';
-  todoData.groups.forEach(group => {
-    if(group.collapsed === undefined) group.collapsed = false;
+  g.tasks.forEach(t => {
+    if (g.hideCompleted && t.completed) return;
+    const div = document.createElement('div');
+    div.className = 'task-item ' + (t.completed ? 'completed' : '');
+    div.innerHTML = `
+      <div class="task-content">
+        <div class="task-text">${t.content}</div>
+      </div>
+      <div class="task-dates">
+        <span>创建: ${formatDate(t.createTime)}</span>
+        <span>编辑: ${formatDate(t.editTime)}</span>
+        ${t.completed ? `<span>完成: ${formatDate(t.completeTime)}</span>` : ''}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderFull() {
+  const c = document.getElementById('groupsContainer');
+  c.innerHTML = '';
+  todoData.groups.forEach(g => {
     const card = document.createElement('div');
     card.className = 'group-card';
-    card.dataset.gid = group.id;
     card.innerHTML = `
-      <div class="group-header" onclick="toggleGroupCollapse('${group.id}')">
+      <div class="group-header" onclick="toggleGroupCollapse('${g.id}')">
         <div class="group-title">
-          <i class="fa fa-chevron-down group-arrow ${group.collapsed ? 'collapsed' : ''}"></i>
-          ${group.name}
+          <i class="fa fa-chevron-down group-arrow ${g.collapsed ? 'collapsed' : ''}"></i>
+          ${g.name}
         </div>
         <div class="group-actions" onclick="event.stopPropagation()">
-          <button class="btn" onclick="openGroupDetail('${group.id}')" title="独立页面"><i class="fa fa-external-link"></i></button>
-          <button class="btn" onclick="editGroup('${group.id}')" title="编辑分组"><i class="fa fa-pencil"></i></button>
-          <button class="btn btn-danger" onclick="deleteGroup('${group.id}')" title="删除分组"><i class="fa fa-trash"></i></button>
+          <button class="text-toggle-btn" onclick="toggleHideCompleted('${g.id}')">
+            ${g.hideCompleted ? "显示已完成" : "隐藏已完成"}
+          </button>
+          <button class="btn" onclick="openGroupDetail('${g.id}')">
+            <i class="fa fa-external-link"></i>
+          </button>
+          <button class="btn" onclick="editGroup('${g.id}')">
+            <i class="fa fa-pencil"></i>
+          </button>
+          <button class="btn btn-danger" onclick="deleteGroup('${g.id}')">
+            <i class="fa fa-trash"></i>
+          </button>
         </div>
       </div>
-      <div class="group-body ${group.collapsed ? 'hide' : ''}">
-        <ul class="task-list" data-gid="${group.id}"></ul>
+      <div class="group-body ${g.collapsed ? 'hide' : ''}">
+        <ul class="task-list" data-gid="${g.id}"></ul>
         <div class="add-task">
-          <input type="text" class="task-input" data-gid="${group.id}" placeholder="添加子事项...">
-          <button class="btn" onclick="addTaskQuick('${group.id}')">添加</button>
+          <input type="text" class="task-input" data-gid="${g.id}" placeholder="添加子事项...">
+          <button class="btn" onclick="addTaskQuick('${g.id}')">添加</button>
         </div>
       </div>
     `;
-    container.appendChild(card);
-    refreshTaskList(group.id);
+    c.appendChild(card);
+    refreshTaskList(g.id);
   });
 
-  document.querySelectorAll('.task-input').forEach(input => {
-    input.onkeydown = e => {
-      if(e.key === 'Enter'){ e.preventDefault(); addTaskQuick(input.dataset.gid); }
-    }
+  document.querySelectorAll('.task-input').forEach(i => {
+    i.onkeydown = e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTaskQuick(i.dataset.gid); }
+    };
   });
 
   initDrag();
   saveData();
+  updateUndoButton();
+}
 
-  if(focusAfterCreateGroupId){
-    setTimeout(()=>{
-      const inp = document.querySelector(`.task-input[data-gid="${focusAfterCreateGroupId}"]`);
-      if(inp) inp.focus();
-      focusAfterCreateGroupId = null;
-    },10);
-  }
+function toggleHideCompleted(gid) {
+  const g = todoData.groups.find(x => x.id === gid);
+  g.hideCompleted = !g.hideCompleted;
+  renderFull();
 }
 
 function toggleGroupCollapse(gid) {
-  const g = todoData.groups.find(x=>x.id===gid);
+  const g = todoData.groups.find(x => x.id === gid);
   g.collapsed = !g.collapsed;
   renderFull();
 }
 
 function refreshTaskList(gid) {
-  const group = todoData.groups.find(g=>g.id===gid);
-  const list = document.querySelector(`.task-list[data-gid="${gid}"]`);
-  if(!list) return;
-  list.innerHTML = '';
-  group.tasks.forEach(task => {
+  const g = todoData.groups.find(x => x.id === gid);
+  const el = document.querySelector(`.task-list[data-gid="${gid}"]`);
+  if (!el) return;
+  el.innerHTML = '';
+  g.tasks.forEach(t => {
+    if (g.hideCompleted && t.completed) return;
     const li = document.createElement('li');
-    li.className = `task-item ${task.completed?'completed':''}`;
-    li.dataset.tid = task.id;
+    li.className = 'task-item ' + (t.completed ? 'completed' : '');
     li.innerHTML = `
       <div class="task-content">
-        <div class="task-text">${task.content}</div>
-        <div class="task-actions">
-          <button class="btn" onclick="toggleComplete('${gid}','${task.id}')"><i class="fa ${task.completed?'fa-check-circle':'fa-circle-o'}"></i></button>
-          <button class="btn" onclick="openEditModal('${task.id}')"><i class="fa fa-pencil"></i></button>
-          <button class="btn btn-danger" onclick="deleteTask('${gid}','${task.id}')"><i class="fa fa-trash"></i></button>
+        <div class="task-text">${t.content}</div>
+        <div>
+          <button class="btn" onclick="toggleComplete('${gid}','${t.id}')" style="padding:4px 8px;font-size:12px;">
+            <i class="fa ${t.completed ? 'fa-check-circle' : 'fa-circle-o'}"></i>
+          </button>
+          <button class="btn" onclick="openEditModal('${t.id}')" style="padding:4px 8px;font-size:12px;margin-left:4px;">
+            <i class="fa fa-pencil"></i>
+          </button>
+          <button class="btn btn-danger" onclick="deleteTask('${gid}','${t.id}')" style="padding:4px 8px;font-size:12px;margin-left:4px;">
+            <i class="fa fa-trash"></i>
+          </button>
         </div>
       </div>
       <div class="task-dates">
-        <span>创建: ${formatDate(task.createTime)}</span>
-        <span>编辑: ${formatDate(task.editTime||'')}</span>
-        ${task.completed?`<span>完成: ${formatDate(task.completeTime)}</span>`:''}
+        <span>创建: ${formatDate(t.createTime)}</span>
+        <span>编辑: ${formatDate(t.editTime)}</span>
+        ${t.completed ? `<span>完成: ${formatDate(t.completeTime)}</span>` : ''}
       </div>
     `;
-    list.appendChild(li);
+    el.appendChild(li);
   });
 }
 
 function addTaskQuick(gid) {
-  const input = document.querySelector(`.task-input[data-gid="${gid}"]`);
-  const val = input.value.trim();
-  if(!val) return;
-  const group = todoData.groups.find(g=>g.id===gid);
-  group.tasks.push({
-    id: generateId(), content: val,
+  const i = document.querySelector(`.task-input[data-gid="${gid}"]`);
+  const v = i.value.trim();
+  if (!v) return;
+  todoData.groups.find(x => x.id === gid).tasks.push({
+    id: generateId(), content: v,
     createTime: new Date().toISOString(),
     editTime: null, completeTime: null, completed: false
   });
-  input.value = '';
-  input.focus();
+  i.value = '';
+  i.focus();
   saveData();
   refreshTaskList(gid);
 }
 
+function toggleComplete(gid, tid) {
+  const t = todoData.groups.find(x => x.id === gid).tasks.find(x => x.id === tid);
+  t.completed = !t.completed;
+  t.completeTime = t.completed ? new Date().toISOString() : null;
+  saveData();
+  refreshTaskList(gid);
+}
+
+function deleteTask(gid, tid) {
+  if (!confirm('确定删除？')) return;
+  const g = todoData.groups.find(x => x.id === gid);
+  g.tasks = g.tasks.filter(x => x.id !== tid);
+  saveData();
+  refreshTaskList(gid);
+}
+
+function addGroup() {
+  const i = document.getElementById('groupInput');
+  const n = i.value.trim();
+  if (!n) return alert('请输入分组名称');
+  todoData.groups.push({
+    id: generateId(), name: n,
+    collapsed: false, hideCompleted: false, tasks: []
+  });
+  i.value = '';
+  renderFull();
+}
+
+function editGroup(gid) {
+  const g = todoData.groups.find(x => x.id === gid);
+  const n = prompt('修改分组名称', g.name);
+  if (n && n.trim()) {
+    g.name = n.trim();
+    saveData();
+    renderFull();
+  }
+}
+
+function deleteGroup(gid) {
+  if (!confirm('确定删除该分组？')) return;
+  todoData.groups = todoData.groups.filter(x => x.id !== gid);
+  saveData();
+  renderFull();
+}
+
 function initDrag() {
   new Sortable(document.getElementById('groupsContainer'), {
-    animation:150, handle:'.group-title',
-    onEnd:evt=>{
-      const item = todoData.groups.splice(evt.oldIndex,1)[0];
-      todoData.groups.splice(evt.newIndex,0,item);
+    animation: 150, handle: '.group-title',
+    onEnd: () => {
+      todoData.groups = Array.from(document.querySelectorAll('.group-card')).map(c => {
+        return todoData.groups.find(g => g.id === c.dataset.gid);
+      });
+      saveData();
       renderFull();
     }
   });
-  document.querySelectorAll('.task-list').forEach(list=>{
-    new Sortable(list,{
-      animation:150, group:{name:'tasks',pull:false,put:false},
-      onEnd:evt=>{
-        const gid = list.dataset.gid;
-        const g = todoData.groups.find(x=>x.id===gid);
-        const t = g.tasks.splice(evt.oldIndex,1)[0];
-        g.tasks.splice(evt.newIndex,0,t);
+  document.querySelectorAll('.task-list').forEach(el => {
+    new Sortable(el, {
+      animation: 150, group: { name: 'tasks', pull: false, put: false },
+      onEnd: () => {
+        const gid = el.dataset.gid;
+        const g = todoData.groups.find(x => x.id === gid);
+        g.tasks = Array.from(el.querySelectorAll('.task-item')).map(i => {
+          return g.tasks.find(t => t.id === i.dataset.tid);
+        });
         saveData();
         refreshTaskList(gid);
       }
@@ -517,63 +601,118 @@ function initDrag() {
   });
 }
 
-function addGroup() {
-  const inp = document.getElementById('groupInput');
-  const name = inp.value.trim();
-  if(!name) return alert('请输入分组名称');
-  todoData.groups.push({id:generateId(),name:name,tasks:[],collapsed:false});
-  inp.value = '';
-  renderFull();
-}
-function editGroup(gid) {
-  const g = todoData.groups.find(x=>x.id===gid);
-  const n = prompt('修改分组名称',g.name);
-  if(n&&n.trim()){ g.name=n.trim(); renderFull(); }
-}
-function deleteGroup(gid) {
-  if(!confirm('确定删除该分组？')) return;
-  todoData.groups = todoData.groups.filter(g=>g.id!==gid);
-  renderFull();
-}
-
-function toggleComplete(gid,tid) {
-  const g = todoData.groups.find(x=>x.id===gid);
-  const t = g.tasks.find(x=>x.id===tid);
-  t.completed = !t.completed;
-  t.completeTime = t.completed ? new Date().toISOString() : null;
-  saveData(); refreshTaskList(gid);
-}
-function deleteTask(gid,tid) {
-  if(!confirm('确定删除？')) return;
-  const g = todoData.groups.find(x=>x.id===gid);
-  g.tasks = g.tasks.filter(x=>x.id!==tid);
-  saveData(); refreshTaskList(gid);
-}
-
 function openEditModal(tid) {
-  let txt='';
-  todoData.groups.forEach(g=>{ const t=g.tasks.find(x=>x.id===tid); if(t) txt=t.content; });
-  currentEditId=tid;
-  document.getElementById('editInput').value=txt;
-  document.getElementById('editModal').classList.remove('hide');
+  let txt = '';
+  todoData.groups.forEach(g => {
+    const t = g.tasks.find(x => x.id === tid);
+    if (t) txt = t.content;
+  });
+  currentEditId = tid;
+  document.getElementById('editInput').value = txt;
+  document.getElementById('editModal').style.display = 'flex';
 }
 function closeEditModal() {
-  document.getElementById('editModal').classList.add('hide');
-  currentEditId=null;
+  document.getElementById('editModal').style.display = 'none';
+  currentEditId = null;
 }
 function saveEdit() {
-  const val=document.getElementById('editInput').value.trim();
-  if(!val) return;
-  todoData.groups.forEach(g=>{
-    const t=g.tasks.find(x=>x.id===currentEditId);
-    if(t){ t.content=val; t.editTime=new Date().toISOString(); }
+  const v = document.getElementById('editInput').value.trim();
+  if (!v) return;
+  todoData.groups.forEach(g => {
+    const t = g.tasks.find(x => x.id === currentEditId);
+    if (t) {
+      t.content = v;
+      t.editTime = new Date().toISOString();
+    }
   });
   closeEditModal();
+  saveData();
   renderFull();
 }
 
-document.getElementById('groupInput').addEventListener('keydown',e=>{
-  if(e.key==='Enter') addGroup();
+// 加密解密（空密码不加密）
+function xcrypt(str, key) {
+  if (!key) return str;
+  let out = '';
+  for (let i=0; i<str.length; i++) {
+    out += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return out;
+}
+function encrypt(data, pwd) {
+  const str = JSON.stringify(data);
+  if (!pwd) return str;
+  return btoa(encodeURIComponent(xcrypt(str, pwd)));
+}
+function decrypt(enc, pwd) {
+  try {
+    if (!pwd) return JSON.parse(enc);
+    return JSON.parse(xcrypt(decodeURIComponent(atob(enc)), pwd));
+  } catch (e) {
+    return null;
+  }
+}
+
+// 导出：先命名，再问密码
+function exportBackup() {
+  let fileName = prompt("请输入备份文件名", "todo-backup");
+  if (!fileName) return;
+  if (!fileName.endsWith(".json")) fileName += ".json";
+
+  const pwd = prompt("请设置加密密码（不输入则不加密）");
+  const content = encrypt(todoData, pwd);
+  const blob = new Blob([content], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+}
+
+// 导入
+function importBackup() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json';
+  inp.onchange = () => {
+    const file = inp.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const pwd = prompt("请输入解密密码（无密码留空）");
+      const data = decrypt(e.target.result, pwd);
+      if (!data || !data.groups) {
+        return alert("密码错误或文件格式不正确");
+      }
+      // 自动备份当前数据用于撤销
+      undoData = JSON.parse(JSON.stringify(todoData));
+      localStorage.setItem('todoUndoData', JSON.stringify(undoData));
+      todoData = data;
+      saveData();
+      renderFull();
+      alert("导入成功，可撤销");
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+// 撤销导入
+function undoImport() {
+  if (!undoData) {
+    alert("无可撤销内容");
+    return;
+  }
+  if (!confirm("确定要恢复到导入前的状态吗？")) return;
+  todoData = JSON.parse(JSON.stringify(undoData));
+  saveData();
+  undoData = null;
+  localStorage.removeItem('todoUndoData');
+  renderFull();
+  alert("已撤销导入");
+}
+
+document.getElementById('groupInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addGroup();
 });
 
 renderFull();
