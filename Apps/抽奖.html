@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽奖</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        body {
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 棋盘样式 */
+        .chessboard {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .grid-cell {
+            aspect-ratio: 1/1;
+            background: #ccc; /* 默认灰色 */
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #000;
+            /* 已去掉数字描边 */
+        }
+
+        .grid-cell:hover:not(.opened) {
+            background: #e3f2fd;
+            transform: scale(1.05);
+        }
+
+        .grid-cell.opened {
+            cursor: default;
+            color: white;
+            text-shadow: 
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000; /* 奖项文字描边 */
+        }
+
+        /* 奖励样式 */
+        .empty { background: #333; } /* 空=和背景一致黑色 */
+        .third { background: #4caf50; }
+        .second { background: #2196f3; }
+        .first { background: #f44336; }
+
+        /* 设置面板样式 */
+        .settings {
+            width: 450px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .settings h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* 列表头：极致收缩列宽 */
+        .table-header {
+            display: grid;
+            grid-template-columns: 0.5fr 0.6fr 2.9fr;
+            background: #f0f0f0;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .reward-list {
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        /* 奖励项：极致收缩 */
+        .reward-item {
+            display: grid;
+            grid-template-columns: 0.5fr 0.6fr 2.9fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .reward-item input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #2196f3;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        .reset-btn {
+            background: #f44336;
+        }
+
+        .reset-btn:hover {
+            background: #d32f2f;
+        }
+
+        .tips {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧棋盘区域 -->
+        <div class="chessboard" id="chessboard"></div>
+
+        <!-- 右侧设置区域 -->
+        <div class="settings">
+            <h2>奖励设置</h2>
+
+            <!-- 列表表头 -->
+            <div class="table-header">
+                <div>个数</div>
+                <div>奖项</div>
+                <div>具体内容</div>
+            </div>
+
+            <!-- 奖励配置列表 -->
+            <div class="reward-list" id="rewardList"></div>
+
+            <!-- 操作按钮 -->
+            <div class="btn-group">
+                <button id="addReward">添加奖励</button>
+                <button id="generateBtn">生成棋盘奖励</button>
+                <button class="reset-btn" id="resetBtn">重置全部</button>
+            </div>
+
+            <div class="tips">
+                预设：空70个 | 三等奖15个 | 二等奖10个 | 一等奖5个<br>
+                点击棋盘格子即可开启奖品
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        const totalCells = 100;
+        let rewardData = [];
+        let cellRewards = [];
+        let openedCells = new Set();
+
+        // 初始化页面
+        window.onload = function() {
+            initChessboard();
+            initDefaultRewards();
+            bindEvents();
+        };
+
+        // 初始化10x10棋盘
+        function initChessboard() {
+            const board = document.getElementById('chessboard');
+            board.innerHTML = '';
+            
+            for (let i = 1; i <= totalCells; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'grid-cell';
+                cell.textContent = i;
+                cell.dataset.index = i - 1;
+                cell.addEventListener('click', openCell);
+                board.appendChild(cell);
+            }
+        }
+
+        // 初始化默认奖励配置
+        function initDefaultRewards() {
+            rewardData = [
+                { ratio: 70, name: '空', content: '无奖励' },
+                { ratio: 15, name: '三等奖', content: '精美礼品' },
+                { ratio: 10, name: '二等奖', content: '品牌家电' },
+                { ratio: 5, name: '一等奖', content: '豪华大奖' }
+            ];
+            renderRewardList();
+        }
+
+        // 渲染奖励配置列表
+        function renderRewardList() {
+            const list = document.getElementById('rewardList');
+            list.innerHTML = '';
+
+            rewardData.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'reward-item';
+
+                itemDiv.innerHTML = `
+                    <input type="number" min="0" value="${item.ratio}" placeholder="个数" data-index="${index}">
+                    <input type="text" value="${item.name}" placeholder="奖项" data-index="${index}">
+                    <input type="text" value="${item.content}" placeholder="具体内容" data-index="${index}">
+                `;
+                list.appendChild(itemDiv);
+            });
+        }
+
+        // 绑定所有事件
+        function bindEvents() {
+            document.getElementById('addReward').addEventListener('click', () => {
+                rewardData.push({ ratio: 0, name: '新奖项', content: '奖励内容' });
+                renderRewardList();
+            });
+
+            // 生成奖励：无弹窗
+            document.getElementById('generateBtn').addEventListener('click', generateRewards);
+
+            // 重置：确认弹窗
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                if(confirm('确定要重置全部数据吗？')){
+                    resetAll();
+                }
+            });
+
+            document.getElementById('rewardList').addEventListener('input', updateRewardData);
+        }
+
+        // 更新奖励数据
+        function updateRewardData(e) {
+            if (!e.target.dataset.index) return;
+            const index = parseInt(e.target.dataset.index);
+            const inputs = e.target.parentElement.querySelectorAll('input');
+            
+            rewardData[index] = {
+                ratio: parseFloat(inputs[0].value) || 0,
+                name: inputs[1].value,
+                content: inputs[2].value
+            };
+        }
+
+        // 生成棋盘奖励（纯个数模式）
+        function generateRewards() {
+            cellRewards = [];
+            openedCells.clear();
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.className = 'grid-cell';
+                cell.textContent = parseInt(cell.dataset.index) + 1;
+            });
+
+            const validRewards = rewardData.filter(item => item.ratio > 0);
+            if (validRewards.length === 0) {
+                alert('请设置有效的奖励数据！');
+                return;
+            }
+
+            const totalCount = validRewards.reduce((sum, item) => sum + item.ratio, 0);
+            if (totalCount > totalCells) {
+                alert('奖励总个数不能超过100个！');
+                return;
+            }
+
+            validRewards.forEach(item => {
+                for (let i = 0; i < item.ratio; i++) {
+                    cellRewards.push(item);
+                }
+            });
+
+            // 补充空奖励
+            const emptyCount = totalCells - cellRewards.length;
+            for (let i = 0; i < emptyCount; i++) {
+                cellRewards.push({ name: '空', content: '无奖励' });
+            }
+
+            // 随机打乱
+            cellRewards.sort(() => Math.random() - 0.5);
+        }
+
+        // 开启格子
+        function openCell(e) {
+            const cell = e.target;
+            const index = parseInt(cell.dataset.index);
+
+            if (openedCells.has(index) || cellRewards.length === 0) return;
+
+            openedCells.add(index);
+            const reward = cellRewards[index];
+            
+            cell.classList.add('opened');
+            
+            if (reward.name === '空') {
+                cell.classList.add('empty');
+                cell.textContent = '空';
+            } else if (reward.name === '三等奖') {
+                cell.classList.add('third');
+                cell.textContent = '三';
+            } else if (reward.name === '二等奖') {
+                cell.classList.add('second');
+                cell.textContent = '二';
+            } else if (reward.name === '一等奖') {
+                cell.classList.add('first');
+                cell.textContent = '一';
+            } else {
+                cell.classList.add('third');
+                cell.textContent = reward.name.substring(0, 2);
+            }
+        }
+
+        // 重置所有
+        function resetAll() {
+            initChessboard();
+            initDefaultRewards();
+            cellRewards = [];
+            openedCells.clear();
+        }
+    </script>
+</body>
+</html>

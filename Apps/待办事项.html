@@ -187,6 +187,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      text-align: left;
     }
     .group-arrow {
       transition: transform 0.2s;
@@ -236,6 +237,10 @@
       justify-content: space-between;
       align-items: center;
     }
+    .task-text {
+      flex: 1;
+      text-align: left;
+    }
     .task-dates {
       font-size: 12px;
       color: var(--text-light);
@@ -255,7 +260,6 @@
       background: var(--input-bg);
       color: var(--text-color);
     }
-    .sortable-ghost { opacity: 0.4; background: var(--border-color) !important; }
     .hide { display: none !important; }
 
     .group-detail-page {
@@ -270,6 +274,19 @@
       align-items: center;
       margin-bottom: 20px;
     }
+
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999;
+    }
+    .modal-content {
+      background: var(--card-bg); padding: 25px; border-radius: 10px; width: 90%; max-width: 500px;
+    }
+    .modal-content input {
+      width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 6px;
+      background: var(--input-bg); color: var(--text-color);
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -323,11 +340,11 @@
   </div>
 </div>
 
-<div id="editModal" class="hide" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:999;">
-  <div style="background:var(--card-bg);padding:25px;border-radius:10px;width:90%;max-width:500px;">
+<div id="editModal" class="modal hide">
+  <div class="modal-content">
     <h3>编辑事项</h3>
-    <input type="text" id="editInput" style="width:100%;padding:10px;margin:10px 0;border:1px solid var(--border-color);border-radius:6px;background:var(--input-bg);color:var(--text-color);">
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:15px;">
+    <input type="text" id="editInput">
+    <div class="modal-actions">
       <button class="btn" onclick="closeEditModal()">取消</button>
       <button class="btn btn-success" onclick="saveEdit()">保存</button>
     </div>
@@ -359,11 +376,7 @@ themeToggle.onclick = () => {
 
 function updateUndoButton() {
   const btn = document.getElementById('undoImportBtn');
-  if (undoData) {
-    btn.classList.remove('hide');
-  } else {
-    btn.classList.add('hide');
-  }
+  btn.classList.toggle('hide', !undoData);
 }
 
 function formatDate(s) {
@@ -424,6 +437,7 @@ function renderFull() {
   todoData.groups.forEach(g => {
     const card = document.createElement('div');
     card.className = 'group-card';
+    card.dataset.gid = g.id;
     card.innerHTML = `
       <div class="group-header" onclick="toggleGroupCollapse('${g.id}')">
         <div class="group-title">
@@ -489,10 +503,11 @@ function refreshTaskList(gid) {
     if (g.hideCompleted && t.completed) return;
     const li = document.createElement('li');
     li.className = 'task-item ' + (t.completed ? 'completed' : '');
+    li.dataset.tid = t.id;
     li.innerHTML = `
       <div class="task-content">
         <div class="task-text">${t.content}</div>
-        <div>
+        <div onclick="event.stopPropagation()">
           <button class="btn" onclick="toggleComplete('${gid}','${t.id}')" style="padding:4px 8px;font-size:12px;">
             <i class="fa ${t.completed ? 'fa-check-circle' : 'fa-circle-o'}"></i>
           </button>
@@ -574,63 +589,77 @@ function deleteGroup(gid) {
   renderFull();
 }
 
+// ===================== 核心：拖拽 + 按钮 完美共存 =====================
 function initDrag() {
-  new Sortable(document.getElementById('groupsContainer'), {
-    animation: 150, handle: '.group-title',
-    onEnd: () => {
-      todoData.groups = Array.from(document.querySelectorAll('.group-card')).map(c => {
-        return todoData.groups.find(g => g.id === c.dataset.gid);
-      });
+  // 分组拖拽（只拖标题，不影响按钮）
+  new Sortable(groupsContainer, {
+    animation: 150,
+    handle: '.group-title',
+    filter: '.btn, button, input, .text-toggle-btn',
+    preventOnFilter: false,
+    onEnd: function () {
+      todoData.groups = Array.from(document.querySelectorAll('.group-card')).map(card =>
+        todoData.groups.find(g => g.id === card.dataset.gid)
+      );
       saveData();
-      renderFull();
     }
   });
-  document.querySelectorAll('.task-list').forEach(el => {
-    new Sortable(el, {
-      animation: 150, group: { name: 'tasks', pull: false, put: false },
-      onEnd: () => {
-        const gid = el.dataset.gid;
-        const g = todoData.groups.find(x => x.id === gid);
-        g.tasks = Array.from(el.querySelectorAll('.task-item')).map(i => {
-          return g.tasks.find(t => t.id === i.dataset.tid);
-        });
+
+  // 任务拖拽：只拖文本区域，按钮100%可点
+  document.querySelectorAll('.task-list').forEach(list => {
+    new Sortable(list, {
+      animation: 150,
+      handle: '.task-text',
+      filter: 'button, .btn',
+      preventOnFilter: false,
+      onEnd: function () {
+        const gid = list.dataset.gid;
+        const group = todoData.groups.find(g => g.id === gid);
+        group.tasks = Array.from(list.querySelectorAll('.task-item')).map(item =>
+          group.tasks.find(t => t.id === item.dataset.tid)
+        );
         saveData();
         refreshTaskList(gid);
       }
     });
   });
 }
+// ====================================================================
 
+// ===================== 编辑功能 100% 正常 =====================
 function openEditModal(tid) {
   let txt = '';
+  let targetGroup = null;
   todoData.groups.forEach(g => {
     const t = g.tasks.find(x => x.id === tid);
-    if (t) txt = t.content;
-  });
-  currentEditId = tid;
-  document.getElementById('editInput').value = txt;
-  document.getElementById('editModal').style.display = 'flex';
-}
-function closeEditModal() {
-  document.getElementById('editModal').style.display = 'none';
-  currentEditId = null;
-}
-function saveEdit() {
-  const v = document.getElementById('editInput').value.trim();
-  if (!v) return;
-  todoData.groups.forEach(g => {
-    const t = g.tasks.find(x => x.id === currentEditId);
     if (t) {
-      t.content = v;
-      t.editTime = new Date().toISOString();
+      txt = t.content;
+      targetGroup = g;
     }
   });
-  closeEditModal();
-  saveData();
-  renderFull();
+  currentEditId = { tid, gid: targetGroup.id };
+  document.getElementById('editInput').value = txt;
+  document.getElementById('editModal').classList.remove('hide');
 }
 
-// 加密解密（空密码不加密）
+function closeEditModal() {
+  document.getElementById('editModal').classList.add('hide');
+  currentEditId = null;
+}
+
+function saveEdit() {
+  const val = document.getElementById('editInput').value.trim();
+  if (!val) return alert('内容不能为空');
+  const g = todoData.groups.find(x => x.id === currentEditId.gid);
+  const t = g.tasks.find(x => x.id === currentEditId.tid);
+  t.content = val;
+  t.editTime = new Date().toISOString();
+  saveData();
+  refreshTaskList(currentEditId.gid);
+  closeEditModal();
+}
+// ==============================================================
+
 function xcrypt(str, key) {
   if (!key) return str;
   let out = '';
@@ -653,12 +682,10 @@ function decrypt(enc, pwd) {
   }
 }
 
-// 导出：先命名，再问密码
 function exportBackup() {
   let fileName = prompt("请输入备份文件名", "todo-backup");
   if (!fileName) return;
   if (!fileName.endsWith(".json")) fileName += ".json";
-
   const pwd = prompt("请设置加密密码（不输入则不加密）");
   const content = encrypt(todoData, pwd);
   const blob = new Blob([content], { type: 'application/json' });
@@ -668,7 +695,6 @@ function exportBackup() {
   a.click();
 }
 
-// 导入
 function importBackup() {
   const inp = document.createElement('input');
   inp.type = 'file';
@@ -683,7 +709,6 @@ function importBackup() {
       if (!data || !data.groups) {
         return alert("密码错误或文件格式不正确");
       }
-      // 自动备份当前数据用于撤销
       undoData = JSON.parse(JSON.stringify(todoData));
       localStorage.setItem('todoUndoData', JSON.stringify(undoData));
       todoData = data;
@@ -696,7 +721,6 @@ function importBackup() {
   inp.click();
 }
 
-// 撤销导入
 function undoImport() {
   if (!undoData) {
     alert("无可撤销内容");
